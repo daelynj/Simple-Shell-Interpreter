@@ -1,6 +1,7 @@
 #include <readline/readline.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #define true 1
@@ -8,6 +9,7 @@
 #define PATH_MAX 4096
 #define HOSTNAME_MAX 1024
 #define LOGIN_MAX 1024
+#define PROMPT_MAX 6144
 
 char *get_hostname() {
   char *hostname = malloc(HOSTNAME_MAX * sizeof(char));
@@ -34,14 +36,22 @@ char *get_login() {
   return login;
 }
 
+char *get_prompt(char *hostname, char *path, char *login) {
+  char *prompt = malloc(PROMPT_MAX * sizeof(char));
+  prompt[PROMPT_MAX - 1] = '\0';
+
+  snprintf(prompt, PROMPT_MAX, "SSI: %s@%s:  %s > ", login, hostname, path);
+
+  return prompt;
+}
+
 char *build_input_field() {
   char *hostname = get_hostname();
   char *path = get_path();
   char *login = get_login();
+  char *prompt = get_prompt(hostname, path, login);
 
-  printf("%s", hostname);
-
-  return "hello";
+  return prompt;
 }
 
 char *get_user_input() {
@@ -53,8 +63,10 @@ char *get_user_input() {
 }
 
 int main() {
-  char *user_input = get_user_input();
-  printf("%s", user_input);
+  while (true) {
+    char *user_input = get_user_input();
+    printf("%s\n", user_input);
+  }
 
   return 0;
 }
