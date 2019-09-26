@@ -1,0 +1,7 @@
+*.o
+*.out
+shell
+arg
+inf
+sample
+fork_test.c
