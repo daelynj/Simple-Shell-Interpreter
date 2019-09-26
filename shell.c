@@ -10,6 +10,7 @@
 #define HOSTNAME_MAX 1024
 #define LOGIN_MAX 1024
 #define PROMPT_MAX 6144
+#define INPUT_SIZE_MAX 128
 
 char *get_hostname() {
   char *hostname = malloc(HOSTNAME_MAX * sizeof(char));
@@ -54,18 +55,27 @@ char *build_input_field() {
   return prompt;
 }
 
-char *get_user_input() {
+int get_user_input(char **user_input) {
   char *input_field = build_input_field();
 
-  char *user_input = readline(input_field);
+  char *raw_user_input = readline(input_field);
 
-  return user_input;
+  char *token = strtok(raw_user_input, " ");
+
+  int i;
+  for (i = 0; i < INPUT_SIZE_MAX; i++) {
+    user_input[i] = token;
+    token = strtok(NULL, " ");
+  }
+
+  return true;
 }
 
 int main() {
   while (true) {
-    char *user_input = get_user_input();
-    printf("%s\n", user_input);
+    char *user_input[INPUT_SIZE_MAX];
+    int condition = get_user_input(user_input);
+    printf("%s\n", *user_input);
   }
 
   return 0;
