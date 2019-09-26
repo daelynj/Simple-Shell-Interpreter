@@ -8,57 +8,26 @@
 #define false 0
 #define PATH_MAX 4096
 #define HOSTNAME_MAX 1024
-#define LOGIN_MAX 1024
-#define PROMPT_MAX 6144
 #define INPUT_SIZE_MAX 128
 
-char *get_hostname() {
-  char *hostname = malloc(HOSTNAME_MAX * sizeof(char));
-  hostname[HOSTNAME_MAX - 1] = '\0';
+void print_input_field() {
+  char hostname[HOSTNAME_MAX];
   gethostname(hostname, HOSTNAME_MAX);
 
-  return hostname;
-}
-
-char *get_path() {
   char cwd[PATH_MAX];
-  char *path = malloc(PATH_MAX * sizeof(char));
-  path[PATH_MAX - 1] = '\0';
-  path = getcwd(cwd, sizeof(cwd));
+  char *path = getcwd(cwd, sizeof(cwd));
 
-  return path;
+  char *login = getlogin();
+
+  printf("%s@", login);
+  printf("%s  ", hostname);
+  printf("%s >", path);
 }
 
-char *get_login() {
-  char *login = malloc(LOGIN_MAX * sizeof(char));
-  login[LOGIN_MAX - 1] = '\0';
-  login = getlogin();
+void get_user_input(char **user_input) {
+  print_input_field();
 
-  return login;
-}
-
-char *get_prompt(char *hostname, char *path, char *login) {
-  char *prompt = malloc(PROMPT_MAX * sizeof(char));
-  prompt[PROMPT_MAX - 1] = '\0';
-
-  snprintf(prompt, PROMPT_MAX, "SSI: %s@%s:  %s > ", login, hostname, path);
-
-  return prompt;
-}
-
-char *build_input_field() {
-  char *hostname = get_hostname();
-  char *path = get_path();
-  char *login = get_login();
-  char *prompt = get_prompt(hostname, path, login);
-
-  return prompt;
-}
-
-int get_user_input(char **user_input) {
-  char *input_field = build_input_field();
-
-  char *raw_user_input = readline(input_field);
+  char *raw_user_input = readline(" ");
 
   char *token = strtok(raw_user_input, " ");
 
@@ -67,16 +36,37 @@ int get_user_input(char **user_input) {
     user_input[i] = token;
     token = strtok(NULL, " ");
   }
+}
 
-  return true;
+void execute_user_input(char **user_input) {
+  pid_t pid = fork();
+  if (pid == 0) {
+    // this is in the child process
+    int execution_condition = execvp(user_input[0], user_input);
+    if (execution_condition == -1) {
+      printf("invalid command\n");
+      exit(true);
+    }
+  } else if (pid < 0) {
+    printf("forking error");
+    exit(true);
+  } else {
+    // this is in the parent process
+    pid_t wait_pid;
+    int condition;
+
+    do {
+      wait_pid = waitpid(pid, &condition, WUNTRACED);
+    } while (!WIFSIGNALED(condition) && !WIFEXITED(condition));
+  }
 }
 
 int main() {
   while (true) {
     char *user_input[INPUT_SIZE_MAX];
-    int condition = get_user_input(user_input);
-    printf("%s\n", *user_input);
+    get_user_input(user_input);
+    execute_user_input(user_input);
   }
 
-  return 0;
+  return true;
 }
