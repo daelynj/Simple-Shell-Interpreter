@@ -1,21 +1,22 @@
 .phony all:
 all: sample inf arg
 
-shell: shell.c
+s: shell.c
 	gcc shell.c -lreadline -o shell
 
-run: shell
+r: shell
 	./shell
 
-sample: sample.c
-	gcc sample.c -lreadline -ltermcap -o sample
+# sample: sample.c
+# 	gcc sample.c -lreadline -ltermcap -o sample
 
-inf: inf.c
-	gcc inf.c -o inf
+# inf: inf.c
+# 	gcc inf.c -o inf
 
-arg: arg.c
-	gcc arg.c -o arg
+# arg: arg.c
+# 	gcc arg.c -o arg
 
 .PHONY clean:
 clean:
-	-rm ./arg ./inf ./sample ./shell
+	# -rm ./arg ./inf ./sample ./shell
+	-rm ./shell
