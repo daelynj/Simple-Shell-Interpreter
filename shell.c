@@ -36,15 +36,20 @@ void get_user_input(char **user_input) {
     user_input[i] = token;
     token = strtok(NULL, " ");
   }
-
-  if (!strcmp(user_input[0], "quit")) {
-    exit(false);
-  }
 }
 
 void execute_user_input(char **user_input) {
-  if (!strcmp(user_input[0], "cd")) {
-    printf("%s", user_input[0]);
+  if (!strcmp(user_input[0], "quit")) {
+    exit(false);
+  } else if (!strcmp(user_input[0], "cd")) {
+    if (user_input[1] == NULL || !strcmp(user_input[1], "~")) {
+      char *home = getenv("HOME");
+      chdir(home);
+    } else {
+      if (chdir(user_input[1]) != 0) {
+        printf("error while changing directories\n");
+      }
+    }
   } else {
     pid_t pid = fork();
 
@@ -55,7 +60,7 @@ void execute_user_input(char **user_input) {
         printf("invalid command\n");
       }
     } else if (pid < 0) {
-      printf("forking error");
+      printf("forking error\n");
     } else {
       // this is in the parent process
       pid_t wait_pid;
