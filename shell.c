@@ -12,7 +12,7 @@
 
 struct bg_pro {
   pid_t pid;
-  char command;
+  char *command[INPUT_SIZE_MAX];
   struct bg_pro *next;
 };
 
@@ -25,6 +25,14 @@ void delete_process_from_list(pid_t pid) {
 
   while (i != NULL) {
     if (i->pid == pid) {
+      printf("%d: ", pid);
+      int k;
+      for (k = 0; k < INPUT_SIZE_MAX; k++) {
+        if (i->command[k] != NULL) {
+          printf("%s ", i->command[k]);
+        }
+      }
+      printf("has terminated.\n");
       if (i == bg_pro_list_head) {
         bg_pro_list_head = bg_pro_list_head->next;
       } else {
@@ -41,8 +49,14 @@ void delete_process_from_list(pid_t pid) {
 void add_process_to_list(pid_t pid, char **user_input) {
   struct bg_pro *new_process = malloc(sizeof(struct bg_pro));
 
+  int i;
+  for (i = 0; i < INPUT_SIZE_MAX; i++) {
+    if (user_input[i] != NULL) {
+      new_process->command[i] = user_input[i + 1];
+    }
+  }
+
   new_process->pid = pid;
-  new_process->command = *user_input[1];
   new_process->next = NULL;
 
   if (bg_pro_list_head == NULL) {
@@ -62,7 +76,6 @@ void check_background_processes() {
     pid = waitpid(-1, &status, WNOHANG);
 
     if (pid > 0 && WIFEXITED(status)) {
-      printf("\nBackground process %d has terminated.\n", pid);
       delete_process_from_list(pid);
     } else {
       break;
@@ -160,8 +173,15 @@ void print_background_task_list() {
   int j = 0;
   while (i != NULL) {
     j++;
-    printf("%d: %c\n", i->pid, i->command);
+    printf("%d: ", i->pid);
+    int k;
+    for (k = 0; k < INPUT_SIZE_MAX; k++) {
+      if (i->command[k] != NULL) {
+        printf("%s ", i->command[k]);
+      }
+    }
     i = i->next;
+    printf("\n");
   }
   printf("Total Background jobs: %d\n", j);
 }
