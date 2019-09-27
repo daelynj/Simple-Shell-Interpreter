@@ -38,38 +38,59 @@ void get_user_input(char **user_input) {
   }
 }
 
+void change_directories(char **user_input) {
+  if (user_input[1] == NULL || !strcmp(user_input[1], "~")) {
+    char *home = getenv("HOME");
+    chdir(home);
+  } else if (chdir(user_input[1]) != 0) {
+    printf("error while changing directories\n");
+  }
+}
+
+void execute_builtin_commands(char **user_input) {
+  pid_t pid = fork();
+  pid_t wait_pid;
+  int condition;
+
+  if (pid == 0) {
+    // this is in the child process
+    int execution_condition = execvp(user_input[0], user_input);
+    if (execution_condition == -1) {
+      printf("invalid command\n");
+    }
+  } else if (pid < 0) {
+    printf("forking error\n");
+  } else {
+    // this is in the parent process
+    do {
+      wait_pid = waitpid(pid, &condition, WUNTRACED);
+    } while (!WIFSIGNALED(condition) && !WIFEXITED(condition));
+  }
+}
+
+void execute_background_task(char **user_input) {
+  //
+  //
+  //
+}
+
+void print_background_task_list() {
+  //
+  //
+  //
+}
+
 void execute_user_input(char **user_input) {
   if (!strcmp(user_input[0], "quit")) {
     exit(false);
   } else if (!strcmp(user_input[0], "cd")) {
-    if (user_input[1] == NULL || !strcmp(user_input[1], "~")) {
-      char *home = getenv("HOME");
-      chdir(home);
-    } else {
-      if (chdir(user_input[1]) != 0) {
-        printf("error while changing directories\n");
-      }
-    }
+    change_directories(user_input);
+  } else if (!strcmp(user_input[0], "bg")) {
+    execute_background_task(user_input);
+  } else if (!strcmp(user_input[0], "bglist")) {
+    print_background_task_list();
   } else {
-    pid_t pid = fork();
-
-    if (pid == 0) {
-      // this is in the child process
-      int execution_condition = execvp(user_input[0], user_input);
-      if (execution_condition == -1) {
-        printf("invalid command\n");
-      }
-    } else if (pid < 0) {
-      printf("forking error\n");
-    } else {
-      // this is in the parent process
-      pid_t wait_pid;
-      int condition;
-
-      do {
-        wait_pid = waitpid(pid, &condition, WUNTRACED);
-      } while (!WIFSIGNALED(condition) && !WIFEXITED(condition));
-    }
+    execute_builtin_commands(user_input);
   }
 }
 
@@ -94,7 +115,6 @@ int main() {
 
 // "env | grep HOME" in BASH to verify
 
-
 // PART 3
 
 // strcmp(argv[0], "bg") == 0
@@ -111,7 +131,7 @@ int main() {
 // struct bg_pro {
 //   pid t pid;
 //   char command[1024];
-//   struct bg_pro* next; // pointer to the next structure, or a \0  
+//   struct bg_pro* next; // pointer to the next structure, or a \0
 // }
 // root should point to a structure.. should point to a structure..  where each
 // struct is a process
@@ -135,4 +155,4 @@ int main() {
 // print info in the linked list and number of bg processes
 
 // bg ls -l == ls -l &
-//   
+//
