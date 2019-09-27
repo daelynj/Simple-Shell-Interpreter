@@ -10,10 +10,10 @@
 #define HOSTNAME_MAX 1024
 #define INPUT_SIZE_MAX 128
 
-struct bg_pro{
-    pid_t pid;
-    char command;
-    struct bg_pro *next;
+struct bg_pro {
+  pid_t pid;
+  char command;
+  struct bg_pro *next;
 };
 
 struct bg_pro *bg_pro_list_head = NULL;
@@ -50,24 +50,24 @@ void add_process_to_list(pid_t pid, char **user_input) {
     bg_pro_list_tail = new_process;
   } else {
     bg_pro_list_tail->next = new_process;
-		bg_pro_list_tail = new_process;
+    bg_pro_list_tail = new_process;
   }
 }
 
 void check_background_processes() {
-	pid_t pid;
-	int	status;
+  pid_t pid;
+  int status;
 
-	while (true) {
-		pid = waitpid(-1, &status, WNOHANG);
+  while (true) {
+    pid = waitpid(-1, &status, WNOHANG);
 
-		if (pid > 0 && WIFEXITED(status)) {
-			printf("\nBackground process %d has terminated.\n", pid);
+    if (pid > 0 && WIFEXITED(status)) {
+      printf("\nBackground process %d has terminated.\n", pid);
       delete_process_from_list(pid);
-		} else {
-			break;
-		}
-	}
+    } else {
+      break;
+    }
+  }
 }
 
 void print_input_field() {
@@ -134,34 +134,34 @@ void execute_background_task(char **user_input) {
     printf("invalid command\n");
     return;
   }
-  
-	pid_t pid = fork();
 
-	if (pid == 0) {
+  pid_t pid = fork();
+
+  if (pid == 0) {
     // this is in the child process
-		int execution_condition = execvp(user_input[1], &user_input[1]);
+    int execution_condition = execvp(user_input[1], &user_input[1]);
     if (execution_condition == -1) {
       printf("invalid command\n");
       exit(1);
     }
-	} else if (pid < 0) {
+  } else if (pid < 0) {
     printf("forking error\n");
   } else {
     // this is in the parent process
-		printf("New background process: %d\n", pid);
+    printf("New background process: %d\n", pid);
     add_process_to_list(pid, user_input);
     usleep(5000);
-	}
+  }
 }
 
 void print_background_task_list() {
   struct bg_pro *i = bg_pro_list_head;
 
-	int j = 0;
-	while (i != NULL) {
+  int j = 0;
+  while (i != NULL) {
     j++;
     printf("%d: %c\n", i->pid, i->command);
-		i = i->next;
+    i = i->next;
   }
   printf("Total Background jobs: %d\n", j);
 }
